@@ -108,7 +108,7 @@ def homepage(request):
 			# os.system(". tf/bin/activate")
 			# os.system("python3 fast-style-transfer-master/evaluate.py --checkpoint "+temp.style.image_ckpt.url[1:]+" --in-path "+temp.content.url[1:]+" --out-path media/images/123.jpg")
 
-			return HttpResponse("File uploaded successfuly")
+			return render(request, 'shirt/display.html')
 	return render(request = request,
 				  template_name='shirt/home.html',
 				  context = {"styleshirts":StyleShirt.objects.all,
