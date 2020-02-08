@@ -1,1 +1,0 @@
-prompt("check if im connected");
