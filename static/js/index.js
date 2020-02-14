@@ -1,4 +1,4 @@
-prompt("check if im not at all connected");
+// prompt("check if im not at all connected");
 
 // var x = document.getElementsByClassName("card");
 // var i;
@@ -21,12 +21,12 @@ function sampleFunction() {
 }
 function highlightImage(e) {
 	e.getElementsByTagName("input")[0].checked = true;
-	console.log(e.getElementsByTagName("input")[0].value)
-	console.log(e.getElementsByTagName("input")[0].checked)
+	// console.log(e.getElementsByTagName("input")[0].value)
+	// console.log(e.getElementsByTagName("input")[0].checked)
 	var inputTags = document.getElementsByName("style")
-	console.log("lol")
-	for(i = 0;i < 6;i++) {
-		console.log(inputTags[i].checked)
+	// console.log("lol")
+	for(i = 0;i < inputTags.length;i++) {
+		// console.log(inputTags[i].checked)
 		inputTags[i].parentElement.style.backgroundColor="rgb(255, 255, 255, 1)";
 		inputTags[i].parentElement.getElementsByTagName("img")[0].style.opacity=1;
 	}
