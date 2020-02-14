@@ -1,0 +1,11 @@
+Django
+django_heroku
+gunicorn
+Keras
+Pillow
+tensorflow
+whitenoise
+django-crispy-forms
+env-file
+cloudinary
+requests

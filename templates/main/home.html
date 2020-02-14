@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Home
+{% endblock %}
+
+  {% block content %}
+      {% if error %}
+          {{ error }}
+      {% endif %}
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- form.as_p}} -->
+        <input type="file" name="content_image">
+
+
+        <div class = "row" id="imgrows">
+        {% for styleshirt in styleshirts %}
+          <div class="col-md-3 col-sm-6">
+            <div style="margin: 10px 1px; padding: 0px;" class="card border border-info" onclick="highlightImage(this)">
+              <input type="radio" value="{{ styleshirt.id }}" name="style" hidden>
+            <img src="{% static styleshirt.image %}" style = " width: 100%; height: 300px;" class="card-img-top" alt="{{ styleshirt.name }}">
+            <!-- <img src= "/media/images/background.png" style="width: 100%; height: 300px; z-index: 2; top: 0px;"> -->
+
+            <div class="card-body">
+              <h5 class="card-title">{{ styleshirt.name }}</h5>
+            </div>
+          </div>  
+          </div>
+          
+        {% endfor %}
+      </div>
+
+
+        <button type="submit">SUBMIT</button>
+    </form>
+  {% endblock %}
+
+  {% block script %}
+    <script type="text/javascript" src="{% static 'js/index.js' %}"></script>
+  {% endblock %}
