@@ -8,3 +8,4 @@ whitenoise
 django-crispy-forms
 env-file
 cloudinary
+requests
