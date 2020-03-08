@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_template_tags %}
 <!DOCTYPE html>
 <html lang='en'>
 <head>
@@ -9,12 +10,15 @@
     </title>
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/01bc33b6b0.js" crossorigin="anonymous"></script>
+    {% if user.is_authenticated %}
+    <link rel="stylesheet" href="{% static 'css/cart.css'%}">
+    {% endif %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
     {% block style %} {% endblock %}
 </head>
-<body>
+<body style="overflow-x:hidden;">
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand" href="{% url 'index' %}">Stylestore</a>
@@ -58,26 +62,68 @@
                 <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="search">
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
             </form>
+            {% if user.is_authenticated %}
+            <button class="bg-dark" style="padding: 10px;margin: auto 10px;border:0;color: white;" onclick="fadeToggleCart()" id="cartButton">
+                <i class="fas fa-shopping-cart"></i> Cart
+                <span class="badge">{{ cart_products|length }}</span>
+            </button>
+            {% endif %}
         </div>
     </nav>
 
 
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-8">
-                <hr class="mt-0 mb-4">
-                {% block content %} {% endblock %}
-                <br>
-                <hr class="mt-0 mb-4">
-            </div>
+
+
+
+
+
+
+
+
+    {% if user.is_authenticated %}
+  <div class="shopping-cart float-right" id="navbarCart" style="display: none;">
+    <div class="shopping-cart-header">
+      <i class="fa fa-shopping-cart cart-icon"></i><span class="badge">{{ cart_products|length }}</span>
+      <div class="shopping-cart-total">
+        <span class="lighter-text">Total:</span>
+        <span class="main-color-text">{{total_cart_payable}} INR</span>
+      </div>
+    </div> <!--end shopping-cart-header -->
+
+    {% if cart_products %}
+    <ul class="shopping-cart-items">
+        {% for each_product in nav_cart_products %}
+        <li class="clearfix">
+            <span class="item-name">{{each_product.template.name}}</span>
+            <span class="item-price">{{each_product.unit_price}} INR</span>
+            <span class="item-quantity">Quantity: {{each_product.quantity}}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+        <div class="py-5 text-center">
+            <h3>Cart is empty</h3>
         </div>
-    </div>
+    {% endif %}
+
+    <a href="{% url 'checkout' %}"><button class="btn btn-primary" style="width: 40%;margin: 0 4%;">Checkout</button></a>
+    <a href="{% url 'cart' %}"><button class="btn btn-primary" style="width: 40%;margin: 0 4%;">View All</button></a>
+  </div> <!--end shopping-cart -->
+    {% endif %}
+
+
+    {% block content %} {% endblock %}
 
     <!-- Optional JavaScript -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="{% static 'js/index.js' %}"></script>
+    {% if user.is_authenticated %}
+    <script type="text/javascript" src="{% static 'js/cart.js' %}"></script>
+    {% endif %}
     {% block script %} {% endblock %}
 </body>
 </html>

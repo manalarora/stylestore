@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 import os
 import tensorflow as tf
 from tensorflow.keras import datasets, layers, models
@@ -17,6 +17,7 @@ import requests
 import io
 from PIL import Image
 
+nav_cart_limit = 3
 cloudinary.config( 
     cloud_name = os.getenv("CLOUD_NAME"),
     api_key = os.getenv("API_KEY"),
@@ -36,17 +37,11 @@ def load_img(path_to_img):
     return img
 
 def tensor_to_image(tensor):
-    print("aa")
     tensor = tensor*255
-    print("aa")
     tensor = np.array(tensor.numpy(), dtype=np.uint8)
-    print("aa")
     if np.ndim(tensor)>3:
-        print("aa")
         assert tensor.shape[0] == 1
-        print("aa")
         tensor = tensor[0]
-    print("aa")
     return tensor
 
 # from main.functions.functions import handle_uploaded_file
@@ -117,23 +112,23 @@ def uploadImage(image, path):
     
     # upload image to cloud
     # cloudinary.uploader.upload(request.FILES['file'])
-    print("bb")
+    print("cloudinary upload 1")
     uploaded_image = cloudinary.uploader.upload(image,
         folder = path,
         overwrite = True,
         resource_type = "image"
     )
-    print("bb")
+    print("cloudinary upload 2")
     image_url = uploaded_image["secure_url"]
     # image_url = uploaded_image["url"]
-    print("bb")
     print(image_url)
     return image_url
 
 def index(request):
-    if request.session.get('checkout_active', False):
-        return HttpResponseRedirect('/checkout')
+    if request.session.get('display_active', False):
+        return HttpResponseRedirect('/display')
     
+    errors = None
     if request.method == "POST":
         form = main_forms.CreateStyledImageForm(request.POST, request.FILES)
         if form.is_valid():
@@ -145,66 +140,172 @@ def index(request):
             # temp = CompleteShirt.objects.latest('id')
             # model.load_weights(temp.style.image_ckpt.url[1:])
 
-            print("lol1")
+            print("Index Page 1")
             model.load_weights(settings.DATA["STYLES_IMAGE_MODEL"] + temp.image_model)
-            print("lol2")
+            print("Index Page 2")
 
             image = load_img(content_image_url)
-            print("lol3")
+            print("Index Page 3")
             image = model(image)
-            print("lol4")
+            print("Index Page 4")
             image = (image+1)/2
-            print("lol5")
+            print("Index Page 5")
             image = tensor_to_image(image)
-            print("lol6")
+            print("Index Page 6")
             # saving result image at result_image_url path
-            # out_img = Image.fromarray(image).convert('RGB')
-            # result_image = io.BytesIO()
-            # out_img.save(result_image, format='png')
-            # result_image.seek(0)
-            # result_image_url = uploadImage(result_image, settings.DATA["RESULT_IMAGE_CLOUD"])
+            out_img = Image.fromarray(image).convert('RGB')
+            result_design_io = io.BytesIO()
+            out_img.save(result_design_io, format='png')
+            result_design_io.seek(0)
+            result_design_url = uploadImage(result_design_io, settings.DATA["RESULT_IMAGE_CLOUD"])
             # ==================================
-            result_image_url = settings.DATA["RESULT_IMAGE"]
-            save_img(result_image_url, image)
-            result_image_url = "/" + result_image_url
-            os.system("python manage.py collectstatic --no-input")
-            print("lol7")
+            # result_design_url = settings.DATA["RESULT_IMAGE"]
+            # save_img(result_design_url, image)
+            # result_design_url = "/" + result_design_url
+            # os.system("python manage.py collectstatic --no-input")
+            print("Index Page 7")
 
             # os.system(". tf/bin/activate")
             # os.system("python3 fast-style-transfer-master/evaluate.py --checkpoint "+temp.style.image_ckpt.url[1:]+" --in-path "+temp.content.url[1:]+" --out-path media/images/123.jpg")
 
-            request.session['style'] = style_id
-            request.session['content_image'] = content_image_url
-            request.session['result_image'] = result_image_url
-            return HttpResponseRedirect('/checkout')
+            styled_templates = {}
+            templates = main_models.Templates.objects.all().values()
+            for i in templates:
+                styled_template_io = io.BytesIO()
+                background = Image.open(result_design_io)
+                foreground = Image.open(i['image'])
+                background.paste(foreground, (0, 0), foreground)
+                background.save(styled_template_io, format='png')
+                styled_template_io.seek(0)
+                styled_template_url = uploadImage(styled_template_io,  settings.DATA["STYLED_TEMPLATE_CLOUD"])
+
+                styled_templates[str(i['id'])] = styled_template_url
+
+            complete_design = {
+                'content_image': content_image_url,
+                'style_id': style_id,
+                'result_design': result_design_url,
+                'styled_templates': str(styled_templates)
+            }
+
+            complete_design_object = main_models.CompleteDesign.objects.create(**complete_design)
+            complete_design['id'] = complete_design_object.id
+            complete_design['styled_templates_list'] = styled_templates
+            request.session['complete_design'] = complete_design
+            return HttpResponseRedirect('/display')
     context = {
-        "styleshirts": main_models.Styles.objects.all
+        "styleshirts": main_models.Styles.objects.all(),
+        "errors": errors
     }
+    get_cart = getCart(request, nav_cart_limit)
+    if get_cart:
+        context = {**context, **get_cart}
     return render(request, 'main/home.html', context)
 
-def checkout(request):
-    request.session['checkout_active'] = True
-    
+def displayTemplates(request):
+    request.session['display_active'] = True
+
     if not request.user.is_authenticated:
-        return HttpResponseRedirect('/auth/login')
-    if not request.session.get('style', None):
-        return HttpResponseRedirect('/auth/login')
-    if not request.session.get('content_image', None):
-        return HttpResponseRedirect('/auth/login')
-    if not request.session.get('result_image', None):
-        return HttpResponseRedirect('/auth/login')
-    
-    
+        return HttpResponseRedirect('/auth/login?next=/display')
+
+    complete_design = request.session.get('complete_design', None)
+    if not complete_design:
+        if request.session.get('display_active', False):
+            del request.session['display_active']
+        return HttpResponseRedirect('/')
+
     context = {
-        "content_image": request.session['content_image'],
-        "result_image": request.session['result_image'],
-        "templates": main_models.Templates.objects.all
+        "content_image": complete_design['content_image'],
+        "result_image": complete_design['style_id'],
+        "templates": main_models.Templates.objects.all,
+        "styled_templates": complete_design['styled_templates_list']
     }
 
-    if request.session.get('checkout_active', False):
-        del request.session['checkout_active']
+    print("Display Templates 1")
+    print(context)
+    print("Display Templates 2")
+
+    if request.session.get('display_active', False):
+        del request.session['display_active']
     
+    get_cart = getCart(request, nav_cart_limit)
+    if get_cart:
+        context = {**context, **get_cart}
+    print("display succeeded")
     return render(request, 'main/display.html', context)
 
+def getCart(request, limit):
+    if not request.user.is_authenticated:
+        return None
 
+    custom_user = main_models.CustomUser.objects.filter(username = request.user.get_username())
+    cart_products = main_models.Cart.objects.filter(user = custom_user[0].id, is_purchased = False)
+
+    total_payable = 0
+    for i in cart_products.values():
+        total_payable += (i['quantity'] * i['unit_price'])
+
+    context = {
+        "cart_products": cart_products,
+        "nav_cart_products": cart_products[:limit],
+        "total_cart_payable": total_payable
+    }
+    return context
+
+def cart(request):
+    context = {
+        "error": None
+    }
+    get_cart = getCart(request, nav_cart_limit)
+    if get_cart:
+        context = {**context, **get_cart}
+    if context:
+        return render(request, 'main/cart.html', context)
+
+    return HttpResponseRedirect('/auth/login?next=/cart')
+
+def addRemoveCart(request):
+    if request.method == "POST":
+        if "add-to-cart" in request.POST:
+            user = main_models.CustomUser.objects.filter(username = request.user.get_username())
+            complete_design = request.session.get('complete_design')
+            template = main_models.Templates.objects.get(id = request.POST['template_id'])
+            cart_object = {
+                "user_id": user[0].id,
+                "is_purchased": False,
+                "complete_design_id": complete_design['id'],
+                "template_id": template.id,
+                "styled_template_url": request.POST['styled_template_url'],
+                "quantity": 1,
+                "unit_price": template.unit_price
+            }
+            cart_object = main_models.Cart.objects.create(**cart_object)
+            return HttpResponse(str(cart_object.id))
+        elif "remove-from-cart" in request.POST:
+            try:
+                cart_object = main_models.Cart.objects.get(id = request.POST['cart_object_id'])
+                cart_object.delete()
+                return HttpResponse("success")
+            except:
+                return HttpResponse("fail")
+    # response = render(request, template_name)
+    # response.status_code = 404
+    # return response
+    return HttpResponseNotFound("hello")
+
+def checkout(request):
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect('/')
+    promocode = None
+    discount = None
+    context = {
+        "customuser": main_models.CustomUser.objects.filter(username = request.user.get_username())[0],
+        "email": request.user.email,
+        "promocode": promocode,
+        "discount": discount
+    }
+    get_cart = getCart(request, nav_cart_limit)
+    if get_cart:
+        context = {**context, **get_cart}
+    return render(request, 'main/checkout.html', context)
 

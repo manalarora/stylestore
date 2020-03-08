@@ -28,6 +28,8 @@ def login(request):
             if user:
                 # creates session for user in request variable
                 auth_login(request, user)
+                if 'next' in request.GET:
+                    return HttpResponseRedirect(request.GET['next'])
                 return HttpResponseRedirect('/')
             else:
                 error = 'Invalid username or password'

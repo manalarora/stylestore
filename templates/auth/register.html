@@ -21,14 +21,23 @@ Register
 {% endblock %}
 
 {% block content %}
-    <h1>Register Page</h1>
-    {% if error %}
-        {{ error }}
-    {% endif %}
-    <form action="" method="post">
-        {% csrf_token %}
-        {{ form|crispy }}
-        <button type="submit" class="btn btn-success">Register</button>
-    </form>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <br>
+            <h1>Register Page</h1>
+            <hr class="mt-0 mb-4">
+            {% if error %}
+                {{ error }}
+            {% endif %}
+            <form action="" method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-success">Register</button>
+            </form>
+            <br>
+        </div>
+    </div>
+</div>
 {% endblock %}
 

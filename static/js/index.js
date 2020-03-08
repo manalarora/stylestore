@@ -19,11 +19,12 @@ function myFunction() {
 function sampleFunction() {
   document.getElementById("sampleDropdown").classList.toggle("show");
 }
+
 function highlightImage(e) {
 	e.getElementsByTagName("input")[0].checked = true;
 	// console.log(e.getElementsByTagName("input")[0].value)
 	// console.log(e.getElementsByTagName("input")[0].checked)
-	var inputTags = document.getElementsByName("style")
+	var inputTags = document.getElementsByName("style");
 	// console.log("lol")
 	for(i = 0;i < inputTags.length;i++) {
 		// console.log(inputTags[i].checked)
@@ -34,3 +35,4 @@ function highlightImage(e) {
 	e.getElementsByTagName("img")[0].style.opacity=0.5;
 	// e.style.border='10px solid #000000';
 }
+

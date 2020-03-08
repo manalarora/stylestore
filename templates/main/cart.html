@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_template_tags %}
+{% block title %}
+Cart
+{% endblock %}
+{% block content %}
+    {% if cart_products %}
+    <div class="container-fluid">
+        <div class="py-5 text-center">
+            <button class="btn btn-primary float-right">Save Cart</button>
+            <h2>Cart</h2>
+        </div>
+
+        <table class="table table-hover text-center">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Unit Price</th>
+                    <th scope="col">Expected Delivery</th>
+                    <th scope="col">Total Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for each_product in cart_products %}
+                <tr>
+                    <th scope="row">1</th>
+                    <td>{{each_product.template.name}}</td>
+                    <td>
+                        <i class="fas fa-minus-circle decQty" onclick="changeCartQuantity(this, -1)"></i>
+                        <span class="currQty">{{each_product.quantity}}</span>
+                        <i class="fas fa-plus-circle incQty" onclick="changeCartQuantity(this, 1)"></i>
+                    </td>
+                    <td>
+                        <i class="fas fa-rupee-sign">
+                        {{each_product.unit_price}}
+                        </i>
+                    </td>
+                    <td>Delivery by Tomorrow</td>
+                    <td>
+                        <i class="fas fa-rupee-sign">
+                        {% multiply each_product.quantity each_product.unit_price %}
+                        </i>
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td colspan="4"></td>
+                    <td><strong>Total Payable:</strong></td>
+                    <td><i class="fas fa-rupee-sign"> {{total_cart_payable}}</i></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="container-fluid">
+        <div class="py-5 text-center">
+            <h2>Cart</h2>
+            <h3>Cart is empty</h3>
+        </div>
+    {% endif %}
+{% endblock %}
