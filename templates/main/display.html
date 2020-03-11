@@ -61,6 +61,9 @@ Book Products
                     <br><br>
 
                     <input type="text" name="products" class="productstatusclass" value="n" hidden>
+                    <i class="fas fa-minus-circle decQty" onclick="changeCartQuantity(this, -1)"></i>
+                        <span class="cartQty">0</span>
+                    <i class="fas fa-plus-circle incQty" onclick="changeCartQuantity(this, 1)"></i>
                     <button type="button" class="btn btn-primary btn-lg" onclick="changeStatusInCart(this)">Add to Cart</button>
             </div>
         </div>

@@ -1,6 +1,6 @@
 const navbarCart = document.getElementById("navbarCart");
 const cartButton = document.getElementById("cartButton");
-const minCartQty = 1, maxCartQty = 5;
+const minCartQty = 0, maxCartQty = 5;
 
 $(document).ready(function(){
     navbarCart.style.marginTop = (cartButton.offsetTop).toString() + "px";
@@ -34,10 +34,10 @@ function enableQty(e) {
     e.style.color = "black";
 }
 var decQtyClass = document.getElementsByClassName("decQty");
-var currQtyClass = document.getElementsByClassName("currQty");
+var cartQtyClass = document.getElementsByClassName("cartQty");
 var incQtyClass = document.getElementsByClassName("incQty");
-for(var i = 0;i < currQtyClass.length;i++) {
-    var n = parseInt(currQtyClass[i].innerHTML);
+for(var i = 0;i < cartQtyClass.length;i++) {
+    var n = parseInt(cartQtyClass[i].innerHTML);
     if(n <= minCartQty) {
         disableQty(decQtyClass[i]);
     }
@@ -46,6 +46,8 @@ for(var i = 0;i < currQtyClass.length;i++) {
     }
 }
 function  changeCartQuantity(e, changeValue) {
+    e.parentElement.getElementsByClassName("isUpdated")[0].value = "y";
+
     var decQtyTag = e.parentElement.getElementsByClassName("decQty")[0];
     var incQtyTag = e.parentElement.getElementsByClassName("incQty")[0];
     var quantityTag = e.parentElement.getElementsByTagName("span")[0];
@@ -68,4 +70,84 @@ function  changeCartQuantity(e, changeValue) {
         return false;
     }
     quantityTag.innerHTML = quantityTagNewValue;
+    try {
+        var total_price = e.parentElement.parentElement.getElementsByClassName("total_price")[0];
+        var unit_price = e.parentElement.parentElement.getElementsByClassName("unit_price")[0];
+        var prev_total_price = parseFloat(total_price.innerHTML);
+        total_price.innerHTML = " " + quantityTagNewValue * parseFloat(unit_price.innerHTML);
+        var new_total_price = parseFloat(total_price.innerHTML);
+        updateTotalPayable(new_total_price - prev_total_price);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+function updateTotalPayable(changeValue) {
+    var total_payable = document.getElementById("total_payable");
+    total_payable.innerHTML = " " + (parseFloat(total_payable.innerHTML) + changeValue);
+}
+
+var deletedProductsArr = new Array();
+function deleteProduct(e) {
+    var cartId = e.parentElement.parentElement.getElementsByClassName("cartId")[0].value;
+    var total_price = parseFloat(e.parentElement.parentElement.getElementsByClassName("total_price")[0].innerHTML);
+    updateTotalPayable(0 - total_price);
+    deletedProductsArr.push(cartId);
+    e.parentElement.parentElement.remove();
+}
+
+function saveCart() {
+    var tableRows = document.getElementsByTagName("tr");
+    var csrftoken = document.getElementsByName("csrfmiddlewaretoken")[0];
+    var cartId = document.getElementsByClassName("cartId");
+    var cartQty = document.getElementsByClassName("cartQty");
+    var isUpdated = document.getElementsByClassName("isUpdated");
+    var productArr = new Array();
+    var numProducts = 0;
+    var rowsToBeRemoved = new Array();
+    for(var i = 0;i < cartId.length;i++) {
+        if(isUpdated[i].value == 'y') {
+            curr = {
+                "0": cartId[i].value,
+                "1": cartQty[i].innerHTML
+            }
+            if(cartQty[i].innerHTML == '0') {
+                // Since heading of table also present
+                // in the list so we store i + 1 as index of row
+                rowsToBeRemoved.push(i + 1);
+            }
+            productArr.push(curr);
+            numProducts++;
+        }
+    }
+    while(deletedProductsArr.length > 0) {
+        curr = {
+            "0": deletedProductsArr[deletedProductsArr.length - 1],
+            "1": 0
+        }
+        productArr.push(curr);
+        deletedProductsArr.pop();
+        numProducts++;
+    }
+    if(numProducts == 0) {
+        return false;
+    }
+    while(rowsToBeRemoved.length > 0) {
+        tableRows[rowsToBeRemoved[rowsToBeRemoved.length - 1]].remove();
+        rowsToBeRemoved.pop();
+    }
+    post_data = {
+        "product_list_len": numProducts,
+        "product_list": productArr,
+        'csrfmiddlewaretoken': csrftoken.value
+    }
+    $.post("/api/update-product-quantity", post_data,
+        function(data) {
+            if(data == "success") {
+                return true;
+            }
+            return false;
+        }
+    );
 }

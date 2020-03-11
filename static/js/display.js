@@ -20,12 +20,17 @@ function changeStatusInCart(e) {
             var templateimage = e.parentElement.parentElement.getElementsByClassName("templateimage")[0];
             var templateid = e.parentElement.parentElement.getElementsByClassName("templateid")[0];
             var cartid = e.parentElement.parentElement.getElementsByClassName("cartid")[0];
-            var csrftoken = document.getElementsByName("csrfmiddlewaretoken")[0];
+			var csrftoken = document.getElementsByName("csrfmiddlewaretoken")[0];
+			var productQty = parseInt(e.parentElement.getElementsByClassName("cartQty")[0].innerHTML);
+			if(productQty == 0) {
+				return false;
+			}
             post_data = {
                 "add-to-cart": true,
                 "styled_template_url": templateimage.src,
                 "template_id": templateid.value,
-                'csrfmiddlewaretoken': csrftoken.value
+				'csrfmiddlewaretoken': csrftoken.value,
+				"quantity": productQty
             }
             console.log(post_data);
             $.post("/api/add-remove-cart", post_data,

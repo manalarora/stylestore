@@ -259,39 +259,9 @@ def cart(request):
     get_cart = getCart(request, nav_cart_limit)
     if get_cart:
         context = {**context, **get_cart}
-    if context:
         return render(request, 'main/cart.html', context)
 
     return HttpResponseRedirect('/auth/login?next=/cart')
-
-def addRemoveCart(request):
-    if request.method == "POST":
-        if "add-to-cart" in request.POST:
-            user = main_models.CustomUser.objects.filter(username = request.user.get_username())
-            complete_design = request.session.get('complete_design')
-            template = main_models.Templates.objects.get(id = request.POST['template_id'])
-            cart_object = {
-                "user_id": user[0].id,
-                "is_purchased": False,
-                "complete_design_id": complete_design['id'],
-                "template_id": template.id,
-                "styled_template_url": request.POST['styled_template_url'],
-                "quantity": 1,
-                "unit_price": template.unit_price
-            }
-            cart_object = main_models.Cart.objects.create(**cart_object)
-            return HttpResponse(str(cart_object.id))
-        elif "remove-from-cart" in request.POST:
-            try:
-                cart_object = main_models.Cart.objects.get(id = request.POST['cart_object_id'])
-                cart_object.delete()
-                return HttpResponse("success")
-            except:
-                return HttpResponse("fail")
-    # response = render(request, template_name)
-    # response.status_code = 404
-    # return response
-    return HttpResponseNotFound("hello")
 
 def checkout(request):
     if not request.user.is_authenticated:
@@ -308,4 +278,52 @@ def checkout(request):
     if get_cart:
         context = {**context, **get_cart}
     return render(request, 'main/checkout.html', context)
+
+def addRemoveCart(request):
+    if request.method == "POST":
+        if "add-to-cart" in request.POST:
+            user = main_models.CustomUser.objects.filter(username = request.user.get_username())
+            complete_design = request.session.get('complete_design')
+            template = main_models.Templates.objects.get(id = request.POST['template_id'])
+            cart_object = {
+                "user_id": user[0].id,
+                "is_purchased": False,
+                "complete_design_id": complete_design['id'],
+                "template_id": template.id,
+                "styled_template_url": request.POST['styled_template_url'],
+                "quantity": request.POST['quantity'],
+                "unit_price": template.unit_price
+            }
+            cart_object = main_models.Cart.objects.create(**cart_object)
+            return HttpResponse(str(cart_object.id))
+        elif "remove-from-cart" in request.POST:
+            try:
+                cart_object = main_models.Cart.objects.get(id = request.POST['cart_object_id'])
+                cart_object.delete()
+                return HttpResponse("success")
+            except:
+                return HttpResponse("fail")
+    # response = render(request, template_name)
+    # response.status_code = 404
+    # return response
+    return HttpResponseNotFound("hello")
+
+def updateProductQuantity(request):
+    if request.method == "POST":
+        product_list_len = int(request.POST['product_list_len'])
+        for i in range(product_list_len):
+            cartId = request.POST['product_list[{}][0]'.format(i)]
+            quantity = request.POST['product_list[{}][1]'.format(i)]
+            print(main_models.Cart.objects.get(id = cartId).quantity, end = " ")
+            product = main_models.Cart.objects.get(id = cartId)
+            if int(quantity) == 0:
+                product.delete()
+            else:
+                product.quantity = quantity
+                product.save(update_fields=['quantity'])
+                print(main_models.Cart.objects.get(id = cartId).quantity, end = " update ")
+                print(quantity)
+        return HttpResponse("success")
+        # return HttpResponse("fail")
+    return HttpResponseNotFound("hello")
 
