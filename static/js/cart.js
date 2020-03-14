@@ -46,7 +46,12 @@ for(var i = 0;i < cartQtyClass.length;i++) {
     }
 }
 function  changeCartQuantity(e, changeValue) {
-    e.parentElement.getElementsByClassName("isUpdated")[0].value = "y";
+    try {
+        e.parentElement.getElementsByClassName("isUpdated")[0].value = "y";
+    }
+    catch(err) {
+        console.log(err);
+    }
 
     var decQtyTag = e.parentElement.getElementsByClassName("decQty")[0];
     var incQtyTag = e.parentElement.getElementsByClassName("incQty")[0];

@@ -23,6 +23,8 @@ function changeStatusInCart(e) {
 			var csrftoken = document.getElementsByName("csrfmiddlewaretoken")[0];
 			var productQty = parseInt(e.parentElement.getElementsByClassName("cartQty")[0].innerHTML);
 			if(productQty == 0) {
+				cartStatus.value = "n";
+				e.innerHTML = "Add To Cart";
 				return false;
 			}
             post_data = {
