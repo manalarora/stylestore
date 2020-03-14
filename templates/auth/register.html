@@ -33,6 +33,7 @@ Register
             <form action="" method="post">
                 {% csrf_token %}
                 {{ form|crispy }}
+                {{ addressform|crispy }}
                 <button type="submit" class="btn btn-success">Register</button>
             </form>
             <br>

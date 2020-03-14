@@ -42,7 +42,7 @@ class CustomUser(models.Model):
     firstname = models.CharField(max_length = 100)
     lastname = models.CharField(max_length = 100)
     phone_number = models.CharField(max_length = 15, null = True)
-    address = models.ForeignKey(Address, on_delete=models.CASCADE)
+    address = models.ForeignKey(Address, on_delete=models.CASCADE, null = True, blank = True)
     GENDERS = (
         ('f', 'Female'),
         ('m', 'Male'),

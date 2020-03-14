@@ -1,5 +1,4 @@
 from django import forms
-
 from main import models
 
 class LoginForm(forms.Form):
@@ -11,5 +10,10 @@ class RegisterForm(forms.ModelForm):
     email = forms.EmailField()
     class Meta:
         model = models.CustomUser
+        exclude = ('address', )
+
+class AddressForm(forms.ModelForm):
+    class Meta:
+        model = models.Address
         fields = '__all__'
 

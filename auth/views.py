@@ -44,14 +44,19 @@ def register(request):
         return HttpResponseRedirect('/')
 
     registerForm = forms.RegisterForm()
+    addressForm = forms.AddressForm()
     error = None
     if request.method == 'POST':
         registerForm = forms.RegisterForm(request.POST)
+        addressForm = forms.AddressForm(request.POST)
         if registerForm.is_valid():
             user = None
-            username = registerForm.cleaned_data['username']
-            password = registerForm.cleaned_data['password']
-            email = registerForm.cleaned_data['email']
+            try:
+                username = registerForm.cleaned_data['username']
+                password = registerForm.cleaned_data['password']
+                email = registerForm.cleaned_data['email']
+            except Exception as e:
+                print(e)
             try:
                 User.objects.get(username = username)
                 # User exists if execution reaches here
@@ -67,12 +72,16 @@ def register(request):
                     user = None
                 if user:
                     # store other user details in database
-                    registerForm.save()
+                    register = registerForm.save()
+                    address = addressForm.save()
+                    register.address = address
+                    register.save()
                     return HttpResponseRedirect('/auth/login')
                 else:
                     error = "User could not be created"
     context = {
         "form": registerForm,
+        "addressform": addressForm,
         "error": error
     }
     return render(request, 'auth/register.html', context)
