@@ -70,9 +70,6 @@ class Order(models.Model):
     expected_delivery = models.DateTimeField()
     delivered_at = models.DateTimeField()
 
-    def __str__(self):
-        return self.id
-
 class CompleteDesign(models.Model):
     content_image = models.URLField()
     style = models.ForeignKey(Styles, on_delete=models.CASCADE)
@@ -93,7 +90,6 @@ class Cart(models.Model):
 
     quantity = models.IntegerField()
     unit_price = models.FloatField()
+
     added_at = models.DateTimeField(auto_now_add = True)
     last_updated_at = models.DateTimeField(auto_now_add = True)
-    def __str__(self):
-        return self.id
