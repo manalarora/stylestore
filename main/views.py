@@ -182,7 +182,10 @@ def index(request):
 
                 styled_templates[str(i['id'])] = styled_template_url
 
+            print("Index Page 7")
+            custom_user = main_models.CustomUser.objects.filter(username = request.user.get_username())
             complete_design = {
+                'user_id': custom_user[0].id,
                 'content_image': content_image_url,
                 'style_id': style_id,
                 'result_design': result_design_url,
@@ -193,6 +196,7 @@ def index(request):
             complete_design['id'] = complete_design_object.id
             complete_design['styled_templates_list'] = styled_templates
             request.session['complete_design'] = complete_design
+            print("Index Page 8")
             return HttpResponseRedirect('/display/')
     context = {
         "styleshirts": main_models.Styles.objects.all(),
