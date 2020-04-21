@@ -6,8 +6,10 @@ class LoginForm(forms.Form):
     password = forms.CharField(widget = forms.PasswordInput)
 
 class RegisterForm(forms.ModelForm):
-    password = forms.CharField(widget = forms.PasswordInput)
+    first_name = forms.CharField()
+    last_name = forms.CharField()
     email = forms.EmailField()
+    password = forms.CharField(widget = forms.PasswordInput)
     class Meta:
         model = models.CustomUser
         exclude = ('address', )

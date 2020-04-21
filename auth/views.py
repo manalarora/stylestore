@@ -53,8 +53,10 @@ def register(request):
             user = None
             try:
                 username = registerForm.cleaned_data['username']
-                password = registerForm.cleaned_data['password']
                 email = registerForm.cleaned_data['email']
+                password = registerForm.cleaned_data['password']
+                first_name = registerForm.cleaned_data['first_name']
+                last_name = registerForm.cleaned_data['last_name']
             except Exception as e:
                 print(e)
             try:
@@ -64,7 +66,7 @@ def register(request):
                 error = "User already exists"
             except User.DoesNotExist:
                 try:
-                    user = User.objects.create_user(username = username, password = password, email = email)
+                    user = User.objects.create_user(username = username, password = password, email = email,first_name = first_name, last_name = last_name)
                     # User created successfully if execution reaches here
                     # as no error occured in creating user
                 except:

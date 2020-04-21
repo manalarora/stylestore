@@ -67,14 +67,14 @@ Checkout
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="firstName">First name</label>
-                            <input type="text" class="form-control" id="firstName" placeholder="" value="{{customuser.firstname}}" required>
+                            <input type="text" class="form-control" id="first_name" placeholder="" value="{{user.first_name}}" required>
                             <div class="invalid-feedback">
                                 Valid first name is required.
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="lastName">Last name</label>
-                            <input type="text" class="form-control" id="lastName" placeholder="" value="{{customuser.lastname}}" required>
+                            <input type="text" class="form-control" id="last_name" placeholder="" value="{{user.last_name}}" required>
                             <div class="invalid-feedback">
                                 Valid last name is required.
                             </div>
@@ -96,7 +96,7 @@ Checkout
 
                     <div class="mb-3">
                         <label for="email">Email <span class="text-muted">(Optional)</span></label>
-                        <input type="email" class="form-control" id="email" placeholder="you@example.com" value="{{email}}">
+                        <input type="email" class="form-control" id="email" placeholder="you@example.com" value="{{user.email}}">
                         <div class="invalid-feedback">
                             Please enter a valid email address for shipping updates.
                         </div>

@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
+from django.utils import timezone
 import os
 import tensorflow as tf
 from tensorflow.keras import datasets, layers, models
@@ -126,7 +127,7 @@ def uploadImage(image, path):
 
 def index(request):
     if request.session.get('display_active', False):
-        return HttpResponseRedirect('/display')
+        return HttpResponseRedirect('/display/')
     
     errors = None
     if request.method == "POST":
@@ -192,12 +193,12 @@ def index(request):
             complete_design['id'] = complete_design_object.id
             complete_design['styled_templates_list'] = styled_templates
             request.session['complete_design'] = complete_design
-            return HttpResponseRedirect('/display')
+            return HttpResponseRedirect('/display/')
     context = {
         "styleshirts": main_models.Styles.objects.all(),
         "errors": errors
     }
-    get_cart = getCart(request, nav_cart_limit)
+    get_cart = getCart(request)
     if get_cart:
         context = {**context, **get_cart}
     return render(request, 'main/home.html', context)
@@ -206,7 +207,7 @@ def displayTemplates(request):
     request.session['display_active'] = True
 
     if not request.user.is_authenticated:
-        return HttpResponseRedirect('/auth/login?next=/display')
+        return HttpResponseRedirect('/auth/login?next=/display/')
 
     complete_design = request.session.get('complete_design', None)
     if not complete_design:
@@ -228,13 +229,13 @@ def displayTemplates(request):
     if request.session.get('display_active', False):
         del request.session['display_active']
     
-    get_cart = getCart(request, nav_cart_limit)
+    get_cart = getCart(request)
     if get_cart:
         context = {**context, **get_cart}
     print("display succeeded")
     return render(request, 'main/display.html', context)
 
-def getCart(request, limit):
+def getCart(request, limit = nav_cart_limit):
     if not request.user.is_authenticated:
         return None
 
@@ -256,12 +257,12 @@ def cart(request):
     context = {
         "error": None
     }
-    get_cart = getCart(request, nav_cart_limit)
+    get_cart = getCart(request)
     if get_cart:
         context = {**context, **get_cart}
         return render(request, 'main/cart.html', context)
 
-    return HttpResponseRedirect('/auth/login?next=/cart')
+    return HttpResponseRedirect('/auth/login/?next=/cart/')
 
 def checkout(request):
     if not request.user.is_authenticated:
@@ -270,11 +271,10 @@ def checkout(request):
     discount = None
     context = {
         "customuser": main_models.CustomUser.objects.filter(username = request.user.get_username())[0],
-        "email": request.user.email,
         "promocode": promocode,
         "discount": discount
     }
-    get_cart = getCart(request, nav_cart_limit)
+    get_cart = getCart(request)
     if get_cart:
         context = {**context, **get_cart}
     return render(request, 'main/checkout.html', context)
@@ -294,6 +294,8 @@ def addRemoveCart(request):
                 "quantity": request.POST['quantity'],
                 "unit_price": template.unit_price
             }
+            cart_object["added_at"] = timezone.now()
+            cart_object["last_updated_at"] = timezone.now()
             cart_object = main_models.Cart.objects.create(**cart_object)
             return HttpResponse(str(cart_object.id))
         elif "remove-from-cart" in request.POST:
@@ -320,7 +322,8 @@ def updateProductQuantity(request):
                 product.delete()
             else:
                 product.quantity = quantity
-                product.save(update_fields=['quantity'])
+                product.last_updated_at = timezone.now()
+                product.save(update_fields=['quantity', 'last_updated_at'])
                 print(main_models.Cart.objects.get(id = cartId).quantity, end = " update ")
                 print(quantity)
         return HttpResponse("success")
