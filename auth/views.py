@@ -74,10 +74,12 @@ def register(request):
                     user = None
                 if user:
                     # store other user details in database
-                    register = registerForm.save()
-                    address = addressForm.save()
-                    register.address = address
-                    register.save()
+                    registered_user = registerForm.save()
+                    address = addressForm.save(commit = False)
+                    address.user = registered_user
+                    address.save()
+                    registered_user.address = address
+                    registered_user.save()
                     return HttpResponseRedirect('/auth/login')
                 else:
                     error = "User could not be created"

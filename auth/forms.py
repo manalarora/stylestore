@@ -17,5 +17,5 @@ class RegisterForm(forms.ModelForm):
 class AddressForm(forms.ModelForm):
     class Meta:
         model = models.Address
-        fields = '__all__'
+        exclude = ('user', )
 
