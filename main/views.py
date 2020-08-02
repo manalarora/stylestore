@@ -6,6 +6,7 @@ import tensorflow as tf
 from tensorflow.keras import datasets, layers, models
 from keras.preprocessing.image import save_img
 import numpy as np
+from django.contrib.auth.decorators import login_required
 tf.compat.v1.enable_eager_execution()
 
 from django.conf import settings
@@ -125,78 +126,97 @@ def uploadImage(image, path):
     print(image_url)
     return image_url
 
+def processStyleForm(style_form_json, username):
+    style_id = style_form_json['style_id']
+    content_image_url = style_form_json['content_image_url']
+
+    temp = main_models.Styles.objects.get(id = style_id)
+    # now we have somehow form the final image
+    # temp = CompleteShirt.objects.latest('id')
+    # model.load_weights(temp.style.image_ckpt.url[1:])
+
+    print("Index Page 1")
+    model.load_weights(settings.DATA["STYLES_IMAGE_MODEL"] + temp.image_model)
+    print("Index Page 2")
+
+    image = load_img(content_image_url)
+    print("Index Page 3")
+    image = model(image)
+    print("Index Page 4")
+    image = (image+1)/2
+    print("Index Page 5")
+    image = tensor_to_image(image)
+    print("Index Page 6")
+    # saving result image at result_image_url path
+    out_img = Image.fromarray(image).convert('RGB')
+    result_design_io = io.BytesIO()
+    out_img.save(result_design_io, format='png')
+    result_design_io.seek(0)
+    result_design_url = uploadImage(result_design_io, settings.DATA["RESULT_IMAGE_CLOUD"])
+    # ==================================
+    # result_design_url = settings.DATA["RESULT_IMAGE"]
+    # save_img(result_design_url, image)
+    # result_design_url = "/" + result_design_url
+    # os.system("python manage.py collectstatic --no-input")
+    print("Index Page 7")
+
+    # os.system(". tf/bin/activate")
+    # os.system("python3 fast-style-transfer-master/evaluate.py --checkpoint "+temp.style.image_ckpt.url[1:]+" --in-path "+temp.content.url[1:]+" --out-path media/images/123.jpg")
+
+    styled_templates = {}
+    templates = main_models.Templates.objects.all().values()
+    for i in templates:
+        styled_template_io = io.BytesIO()
+        background = Image.open(result_design_io)
+        foreground = Image.open(i['image'])
+        background.paste(foreground, (0, 0), foreground)
+        background.save(styled_template_io, format='png')
+        styled_template_io.seek(0)
+        styled_template_url = uploadImage(styled_template_io,  settings.DATA["STYLED_TEMPLATE_CLOUD"])
+
+        styled_templates[str(i['id'])] = styled_template_url
+
+    print("Index Page 7")
+    custom_user = main_models.CustomUser.objects.filter(username = username).first()
+    complete_design = {
+        'user_id': custom_user.id,
+        'content_image': content_image_url,
+        'style_id': style_id,
+        'result_design': result_design_url,
+        'styled_templates': str(styled_templates)
+    }
+
+    complete_design_object = main_models.CompleteDesign.objects.create(**complete_design)
+    complete_design['id'] = complete_design_object.id
+    complete_design['styled_templates_list'] = styled_templates
+    print("Index Page 8")
+    return complete_design
+
 def index(request):
     if request.session.get('display_active', False):
+        return HttpResponseRedirect('/display/')
+    
+    if request.session.get('style_form_json', None) and request.user.is_authenticated:
+        style_form_json = request.session['style_form_json']
+        complete_design = processStyleForm(style_form_json, request.user.get_username())
+        request.session['complete_design'] = complete_design
+        del request.session['style_form_json']
         return HttpResponseRedirect('/display/')
     
     errors = None
     if request.method == "POST":
         form = main_forms.CreateStyledImageForm(request.POST, request.FILES)
         if form.is_valid():
-            style_id = form.cleaned_data['style']
             content_image_url = uploadImage(form.cleaned_data['content_image'], settings.DATA["CONTENT_IMAGE_CLOUD"])
-
-            temp = main_models.Styles.objects.get(id = style_id)
-            # now we have somehow form the final image
-            # temp = CompleteShirt.objects.latest('id')
-            # model.load_weights(temp.style.image_ckpt.url[1:])
-
-            print("Index Page 1")
-            model.load_weights(settings.DATA["STYLES_IMAGE_MODEL"] + temp.image_model)
-            print("Index Page 2")
-
-            image = load_img(content_image_url)
-            print("Index Page 3")
-            image = model(image)
-            print("Index Page 4")
-            image = (image+1)/2
-            print("Index Page 5")
-            image = tensor_to_image(image)
-            print("Index Page 6")
-            # saving result image at result_image_url path
-            out_img = Image.fromarray(image).convert('RGB')
-            result_design_io = io.BytesIO()
-            out_img.save(result_design_io, format='png')
-            result_design_io.seek(0)
-            result_design_url = uploadImage(result_design_io, settings.DATA["RESULT_IMAGE_CLOUD"])
-            # ==================================
-            # result_design_url = settings.DATA["RESULT_IMAGE"]
-            # save_img(result_design_url, image)
-            # result_design_url = "/" + result_design_url
-            # os.system("python manage.py collectstatic --no-input")
-            print("Index Page 7")
-
-            # os.system(". tf/bin/activate")
-            # os.system("python3 fast-style-transfer-master/evaluate.py --checkpoint "+temp.style.image_ckpt.url[1:]+" --in-path "+temp.content.url[1:]+" --out-path media/images/123.jpg")
-
-            styled_templates = {}
-            templates = main_models.Templates.objects.all().values()
-            for i in templates:
-                styled_template_io = io.BytesIO()
-                background = Image.open(result_design_io)
-                foreground = Image.open(i['image'])
-                background.paste(foreground, (0, 0), foreground)
-                background.save(styled_template_io, format='png')
-                styled_template_io.seek(0)
-                styled_template_url = uploadImage(styled_template_io,  settings.DATA["STYLED_TEMPLATE_CLOUD"])
-
-                styled_templates[str(i['id'])] = styled_template_url
-
-            print("Index Page 7")
-            custom_user = main_models.CustomUser.objects.filter(username = request.user.get_username())
-            complete_design = {
-                'user_id': custom_user[0].id,
-                'content_image': content_image_url,
-                'style_id': style_id,
-                'result_design': result_design_url,
-                'styled_templates': str(styled_templates)
+            style_form_json = {
+                "style_id": form.cleaned_data['style'],
+                "content_image_url": content_image_url,
             }
-
-            complete_design_object = main_models.CompleteDesign.objects.create(**complete_design)
-            complete_design['id'] = complete_design_object.id
-            complete_design['styled_templates_list'] = styled_templates
+            if not request.user.is_authenticated:
+                request.session['style_form_json'] = style_form_json
+                return HttpResponseRedirect('/auth/login?next=/')
+            complete_design = processStyleForm(style_form_json, request.user.get_username())
             request.session['complete_design'] = complete_design
-            print("Index Page 8")
             return HttpResponseRedirect('/display/')
     context = {
         "styleshirts": main_models.Styles.objects.all(),
@@ -268,9 +288,8 @@ def cart(request):
 
     return HttpResponseRedirect('/auth/login/?next=/cart/')
 
+@login_required
 def checkout(request):
-    if not request.user.is_authenticated:
-        return HttpResponseRedirect('/')
     promocode = None
     discount = None
     context = {
