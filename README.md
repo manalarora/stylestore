@@ -1,6 +1,12 @@
 # stylestore
 mega project  
 
+
+
+https://user-images.githubusercontent.com/42407286/126860279-919fa0a0-0505-4d20-915a-50910a30fd59.mp4
+
+
+
 ### Steps to initialise database
 ```python manage.py makemigrations```  
 ```python manage.py migrate```  
