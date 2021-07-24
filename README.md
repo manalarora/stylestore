@@ -2,8 +2,7 @@
 mega project  
 
 
-
-https://user-images.githubusercontent.com/42407286/126860279-919fa0a0-0505-4d20-915a-50910a30fd59.mp4
+![stylestore_finalvid](https://user-images.githubusercontent.com/42407286/126860339-0508b0aa-f3ed-4d69-83b5-b07b397ee394.gif)
 
 
 
