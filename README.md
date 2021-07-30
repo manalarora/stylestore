@@ -1,10 +1,33 @@
-# stylestore
-mega project  
+# Stylestore
 
+### Problem Statement
+
+- The clothes are much more than an item of apparel these days. The clothes a person wears reveals a lot about them. Subcounsciously our confidence levels are -associated with how we look.  
+- All people have different taste in fashion depending upon on their personal outlook of how their clothes suit their shape, size, age and the amount of confidence it gives them.
+- Keeping this in mind we propose to make a easy to use web based platform where we give total control to the users so they can design their merchandise with the content and style they want.
+
+### Proposed Solution
+- We propose a neural style transfer-based e-commerce web application which provides a variety of personalised items like mobile covers, mugs, t-shirts made using a combination of the content and style provided by the user.
+- We’ll provide a visual estimate of how the items would look on using different styles and content given by the user
+- Users can order the items they like.
 
 ![stylestore_finalvid](https://user-images.githubusercontent.com/42407286/126860339-0508b0aa-f3ed-4d69-83b5-b07b397ee394.gif)
 
+### Solution Deep-Dive
 
+#### Neural style transfer 
+- It is an optimization technique used to take two images, content image and style reference image, blend them together such that output image look like the content image, but “painted” in the style of the style image.
+- There are two loss functions, one that describes how different the content of two images are (Content Loss) and one that describes the difference between the two images in terms of their style (Style Loss). We try to minimize the LContent distance with the content image and LStyle with the style image.
+
+In addition to user uploading his own style image we’ll also provide a list of styles to the user. The advantage of this is we can train image to image translation models to produce the final image for that particular style hence our output process would speedup and processing power required would decrease.
+
+![image](https://user-images.githubusercontent.com/42407286/127613897-624bf65c-f378-4f35-8042-7ad7bf1cf84f.png)
+
+### Impact
+- We are trying to create a better experience for the user where we show items that are according to their taste and needs which would hopefully instill a buying behaviour in them.
+- Judging from the success of various image to image translation based  products like filters on social media apps, faceapp, photo-booth on iphone, we can safely say that this product have all the ingredients to be a commercial success.
+- Customers ordering personalized merchandise that make them feel confident about themselves will have a positive impact on them.
+- With customized ordering in-house manufacturing will thrive.
 
 ### Steps to initialise database
 ```python manage.py makemigrations```  
